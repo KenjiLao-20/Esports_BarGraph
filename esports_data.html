@@ -53,6 +53,7 @@
             display: flex; /* Use flexbox for button alignment */
             flex-direction: column; /* Stack elements vertically */
             align-items: center; /* Center items horizontally */
+            position: relative; /* Position relative for the switch */
         }
 
         .button-row {
@@ -95,8 +96,8 @@
 
         .theme-switch {
             position: absolute; /* Positioning the switch */
-            bottom: 20px; /* Distance from the bottom */
-            left: 20px; /* Distance from the left */
+            bottom: 10px; /* Distance from the bottom */
+            left: 10px; /* Distance from the left */
             display: flex; /* Flexbox for alignment */
             align-items: center; /* Center vertically */
         }
@@ -147,21 +148,17 @@
             transform: translateX(25px); /* Move circle to the right */
         }
 
-        .theme-label {
-            font-size: 24px; /* Emoji size */
-        }
-
         .slider:after {
             content: '🌞'; /* Sun icon */
             position: absolute;
-            left: 5px; /* Position for sun emoji */
+            left: 1px; /* Position for sun emoji */
             top: 2px; /* Adjust position for sun emoji */
             transition: opacity 0.4s;
         }
 
         input:checked + .slider:after {
             content: '🌙'; /* Moon icon */
-            left: 30px; /* Adjust position for moon emoji */
+            left: 27px; /* Adjust position for moon emoji */
         }
     </style>
 </head>
@@ -174,16 +171,15 @@
                 <button id="processButton">Process Data</button>
                 <button id="exportButton" style="display:none;">Export Data</button>
             </div>
+            <div class="theme-switch">
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle" />
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
         <div class="chart-container">
             <canvas id="releaseYearChart"></canvas>
-        </div>
-        <div class="theme-switch">
-            <label class="switch">
-                <input type="checkbox" id="theme-toggle" />
-                <span class="slider"></span>
-            </label>
-
         </div>
     </div>
 
@@ -328,8 +324,6 @@
         function toggleTheme() {
             isDarkMode = !isDarkMode;
             document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
-            const themeLabel = document.getElementById('theme-label');
-            themeLabel.textContent = isDarkMode ? '🌙' : '🌞'; // Change emoji based on theme
         }
 
         function exportData() {
