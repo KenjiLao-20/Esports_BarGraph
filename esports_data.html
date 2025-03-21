@@ -5,15 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Release Year Analysis</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-        canvas {
-            max-width: 800px; /* Increased width for better visibility */
-            max-height: 600px; /* Increased height for better visibility */
+        .chart-container {
+            width: 100%; /* Full width */
+            max-width: 800px; /* Limit max width */
+            height: 400px; /* Set a reasonable height */
+            overflow-x: auto; /* Allow horizontal scrolling */
             margin: auto;
+        }
+        canvas {
+            width: 800px;  /* Set the canvas width */
+            height: 400px; /* Set the canvas height */
         }
         button {
             margin-top: 10px;
@@ -25,7 +32,9 @@
     <input type="file" id="fileInput" accept=".csv" />
     <button id="processButton">Process Data</button>
     <button id="exportButton" style="display:none;">Export Data</button>
-    <canvas id="releaseYearChart"></canvas>
+    <div class="chart-container">
+        <canvas id="releaseYearChart"></canvas>
+    </div>
 
     <script>
         document.getElementById('processButton').addEventListener('click', processData);
@@ -71,16 +80,29 @@
 
         function createChart() {
             const ctx = document.getElementById('releaseYearChart').getContext('2d');
-            const labels = Object.keys(releaseYearData);
+            const labels = Object.keys(releaseYearData).sort(); // Sort years
             const data = Object.values(releaseYearData);
+
+            // Create an array of years to display, excluding 2021 to 2025 if their data is zero
+            const yearsToDisplay = [];
+            const filteredData = [];
+
+            for (let i = 0; i < labels.length; i++) {
+                const year = labels[i];
+                // Exclude years 2021 to 2025 if they have no data
+                if (year < 2021 || year > 2025 || (releaseYearData[year] && releaseYearData[year] > 0)) {
+                    yearsToDisplay.push(year);
+                    filteredData.push(releaseYearData[year] || 0);
+                }
+            }
 
             const chart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: labels,
+                    labels: yearsToDisplay,
                     datasets: [{
                         label: 'Number of Games Released',
-                        data: data,
+                        data: filteredData,
                         backgroundColor: 'rgba(75, 192, 192, 0.6)',
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1
@@ -99,6 +121,16 @@
                                 label: function(tooltipItem) {
                                     return `${tooltipItem.label}: ${tooltipItem.raw} games`;
                                 }
+                            }
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'end',
+                            formatter: (value) => value,
+                            color: 'black',
+                            font: {
+                                weight: 'bold',
+                                size: 12
                             }
                         }
                     },
@@ -130,6 +162,9 @@
                                 font: {
                                     size: 16 // Increase x-axis label font size
                                 }
+                            },
+                            ticks: {
+                                autoSkip: false // Show all x-axis labels
                             }
                         }
                     }
