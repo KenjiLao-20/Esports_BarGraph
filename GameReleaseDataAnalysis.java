@@ -13,6 +13,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Map;
+import java.util.TreeMap;
+import org.jfree.data.UnknownKeyException;
 
 public class GameReleaseDataAnalysis extends JFrame {
     private DefaultCategoryDataset dataset;
@@ -92,28 +95,47 @@ public class GameReleaseDataAnalysis extends JFrame {
         }
     }
 
-    private void processCSVFile(File file) {
-        dataset.clear(); // Clear previous data
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            br.readLine(); // Skip header
-            while ((line = br.readLine()) != null) {
-                String[] columns = line.split("\t"); // Split by tab character
-                if (columns.length > 8) {
-                    String releaseYear = columns[8].trim(); // Assuming the release year is in the 9th column
-                    if (!releaseYear.isEmpty()) {
-                        // Increment count for the year
-                        int currentCount = dataset.getValue("Games", releaseYear) == null ? 0 : dataset.getValue("Games", releaseYear).intValue();
-                        dataset.addValue(currentCount + 1, "Games", releaseYear); // Count the number of games released in that year
+private void processCSVFile(File file) {
+    dataset.clear(); // Clear previous data
+    Map<String, Integer> yearCountMap = new TreeMap<>(); // Use TreeMap to store year counts
+
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+        String line;
+        br.readLine(); // Skip header
+        while ((line = br.readLine()) != null) {
+            String[] columns = line.split(","); // Split by comma
+            if (columns.length > 8) {
+                String releaseYear = columns[8].trim(); // Assuming the release year is in the 9th column
+                if (!releaseYear.isEmpty()) {
+                    // Check if the year is within the desired range
+                    int year;
+                    try {
+                        year = Integer.parseInt(releaseYear);
+                        if (year >= 1993 && year <= 2020) {
+                            // Increment the count for the year
+                            yearCountMap.put(releaseYear, yearCountMap.getOrDefault(releaseYear, 0) + 1);
+                        }
+                    } catch (NumberFormatException e) {
+                        // Handle the case where the year is not a valid integer
+                        System.out.println("Invalid year format: " + releaseYear);
                     }
                 }
             }
-            chart.fireChartChanged(); // Refresh the chart
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error reading file: " + ex.getMessage());
         }
+
+        // Add the sorted data to the dataset
+        for (Map.Entry<String, Integer> entry : yearCountMap.entrySet()) {
+            dataset.addValue(entry.getValue(), "Games", entry.getKey());
+        }
+
+        chart.fireChartChanged(); // Refresh the chart
+        chartPanel.revalidate(); // Revalidate the chart panel
+        chartPanel.repaint(); // Repaint the chart panel
+    } catch (IOException ex) {
+        ex.printStackTrace();
+        JOptionPane.showMessageDialog(this, "Error reading file: " + ex.getMessage());
     }
+}
 
     private class ExportDataAction implements ActionListener {
         @Override
