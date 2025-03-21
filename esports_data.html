@@ -7,40 +7,107 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <style>
+        :root {
+            --background-color: #ffffff; /* Light mode background */
+            --text-color: #000000; /* Light mode text color */
+            --button-bg: #007bff; /* Button background */
+            --button-text: #ffffff; /* Button text color */
+            --border-color: #000000; /* Light mode border color */
+            --container-bg: #f8f9fa; /* Fixed container background */
+        }
+
+        [data-theme="dark"] {
+            --background-color: #121212; /* Dark mode background */
+            --text-color: #ffffff; /* Dark mode text color */
+            --button-bg: #1e88e5; /* Dark button background */
+            --button-text: #ffffff; /* Dark button text color */
+            --border-color: #ffffff; /* Dark mode border color */
+            --container-bg: #343a40; /* Fixed container background for dark mode */
+        }
+
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s; /* Smooth transition */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Full viewport height */
         }
-        .chart-container {
-            width: 100%; /* Full width */
+
+        .container {
+            text-align: center; /* Center text */
             max-width: 800px; /* Limit max width */
+            width: 100%; /* Full width */
+        }
+
+        .button-container {
+            background-color: var(--container-bg); /* Fixed background color */
+            padding: 20px; /* Padding for the button container */
+            border-radius: 10px; /* Rounded corners */
+            margin-bottom: 20px; /* Space between button container and chart */
+        }
+
+        .chart-container {
             height: 400px; /* Set a reasonable height */
             overflow-x: auto; /* Allow horizontal scrolling */
             margin: auto;
+            border: 2px solid var(--border-color); /* Border around the chart */
+            border-radius: 10px; /* Rounded corners */
+            padding: 10px; /* Padding inside the border */
+            background-color: var(--background-color); /* Background color for the chart area */
+            transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for border and background */
         }
+
         canvas {
             width: 800px;  /* Set the canvas width */
             height: 400px; /* Set the canvas height */
         }
+
         button {
             margin-top: 10px;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s; /* Smooth transition for button */
+        }
+
+        button:hover {
+            background-color: darken(var(--button-bg), 10%); /* Darken on hover */
+        }
+
+        #theme-toggle {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>Game Release Year Analysis</h1>
-    <input type="file" id="fileInput" accept=".csv" />
-    <button id="processButton">Process Data</button>
-    <button id="exportButton" style="display:none;">Export Data</button>
-    <div class="chart-container">
-        <canvas id="releaseYearChart"></canvas>
+    <div class="container">
+        <div class="button-container">
+            <h1>Game Release Year Analysis</h1>
+            <input type="file" id="fileInput" accept=".csv" />
+            <button id="processButton">Process Data</button>
+            <button id="exportButton" style="display:none;">Export Data</button>
+            <button id="theme-toggle">Switch to Dark Mode</button>
+        </div>
+        <div class="chart-container">
+            <canvas id="releaseYearChart"></canvas>
+        </div>
     </div>
 
     <script>
         document.getElementById('processButton').addEventListener('click', processData);
         document.getElementById('exportButton').addEventListener('click', exportData);
+        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 
         let releaseYearData = {};
+        let isDarkMode = false;
 
         function processData() {
             const fileInput = document.getElementById('fileInput');
@@ -170,6 +237,12 @@
                     }
                 }
             });
+        }
+
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+            document.getElementById('theme-toggle').textContent = isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode';
         }
 
         function exportData() {
