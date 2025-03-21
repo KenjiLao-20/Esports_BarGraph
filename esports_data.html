@@ -11,7 +11,7 @@
             --background-color: #ffffff; /* Light mode background */
             --text-color: #000000; /* Light mode text color */
             --button-bg: #007bff; /* Button background */
-            --button-text: #ffffff; /* Button text color */
+            --button-text: #000000; /* Button text color */
             --border-color: #000000; /* Light mode border color */
             --container-bg: #f8f9fa; /* Fixed container background */
         }
@@ -49,6 +49,7 @@
             padding: 20px; /* Padding for the button container */
             border-radius: 10px; /* Rounded corners */
             margin-bottom: 20px; /* Space between button container and chart */
+            position: relative; /* Position relative for absolute positioning of buttons */
         }
 
         .chart-container {
@@ -76,6 +77,7 @@
             cursor: pointer;
             border-radius: 5px;
             transition: background-color 0.3s; /* Smooth transition for button */
+            width: 100%; /* Make buttons full width */
         }
 
         button:hover {
@@ -123,7 +125,7 @@
                 const csvData = event.target.result;
                 parseCSV(csvData);
                 createChart();
-                document.getElementById('exportButton').style.display = 'block';
+                document.getElementById('exportButton').style.display = 'block'; // Show export button
             };
             reader.readAsText(file);
         }
