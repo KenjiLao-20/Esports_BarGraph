@@ -15,6 +15,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.data.UnknownKeyException;
 
 public class GameReleaseDataAnalysis extends JFrame {
@@ -61,15 +63,22 @@ public class GameReleaseDataAnalysis extends JFrame {
         setVisible(true);
     }
 
-    private JFreeChart createChart(CategoryDataset dataset) {
-        return ChartFactory.createBarChart(
-                "Distribution of Games by Release Year",
-                "Release Year",
-                "Number of Games",
-                dataset,
-                PlotOrientation.VERTICAL,
-                true, true, false);
-    }
+private JFreeChart createChart(CategoryDataset dataset) {
+    JFreeChart chart = ChartFactory.createBarChart(
+            "Distribution of Games by Release Year",
+            "Release Year",
+            "Number of Games",
+            dataset,
+            PlotOrientation.VERTICAL,
+            true, true, false);
+
+    // Adjust the category label font size
+    CategoryAxis categoryAxis = chart.getCategoryPlot().getDomainAxis();
+    categoryAxis.setLabelFont(new Font("SansSerif", Font.PLAIN, 10)); // Smaller font size
+    categoryAxis.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(Math.PI / 4.0)); // Rotate labels
+
+    return chart;
+}
 
     private class UploadFileAction implements ActionListener {
         @Override
