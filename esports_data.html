@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Release Year Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        canvas {
+            max-width: 800px; /* Increased width for better visibility */
+            max-height: 600px; /* Increased height for better visibility */
+            margin: auto;
+        }
+        button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Game Release Year Analysis</h1>
+    <input type="file" id="fileInput" accept=".csv" />
+    <button id="processButton">Process Data</button>
+    <button id="exportButton" style="display:none;">Export Data</button>
+    <canvas id="releaseYearChart"></canvas>
+
+    <script>
+        document.getElementById('processButton').addEventListener('click', processData);
+        document.getElementById('exportButton').addEventListener('click', exportData);
+
+        let releaseYearData = {};
+
+        function processData() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select a CSV file.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const csvData = event.target.result;
+                parseCSV(csvData);
+                createChart();
+                document.getElementById('exportButton').style.display = 'block';
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(data) {
+            const rows = data.split('\n').slice(1); // Skip header row
+            releaseYearData = {};
+
+            rows.forEach(row => {
+                const columns = row.split(',');
+                if (columns.length > 8) { // Ensure there are enough columns
+                    const releaseYear = columns[8].trim(); // Assuming the release year is in the 9th column
+                    
+                    // Check if the release year is a valid number and within a reasonable range
+                    if (releaseYear && !isNaN(releaseYear) && releaseYear >= 1990 && releaseYear <= new Date().getFullYear()) {
+                        releaseYearData[releaseYear] = (releaseYearData[releaseYear] || 0) + 1;
+                    }
+                }
+            });
+        }
+
+        function createChart() {
+            const ctx = document.getElementById('releaseYearChart').getContext('2d');
+            const labels = Object.keys(releaseYearData);
+            const data = Object.values(releaseYearData);
+
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Number of Games Released',
+                        data: data,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Allow the chart to fill the canvas
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return `${tooltipItem.label}: ${tooltipItem.raw} games`;
+                                }
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Distribution of Games by Release Year',
+                        font: {
+                            size: 20 // Increase title font size
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Games',
+                                font: {
+                                    size: 16 // Increase y-axis label font size
+                                }
+                            },
+                            ticks: {
+                                stepSize: 1 // Set step size for y-axis ticks
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Release Year',
+                                font: {
+                                    size: 16 // Increase x-axis label font size
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function exportData() {
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "Release Year,Number of Games\n"
+                + Object.entries(releaseYearData)
+                    .map(([year, count]) => `${year},${count}`)
+                    .join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "release_year_data.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
