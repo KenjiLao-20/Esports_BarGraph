@@ -10,8 +10,10 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
@@ -156,8 +158,38 @@ public class GameReleaseDataAnalysis extends JFrame {
     private class ExportDataAction implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            // Implement export functionality here (e.g., save dataset to CSV)
-            JOptionPane.showMessageDialog(GameReleaseDataAnalysis.this, "Export functionality not implemented.");
+            if (dataset.getRowCount() == 0) {
+                JOptionPane.showMessageDialog(GameReleaseDataAnalysis.this, "No data to export.");
+                return;
+            }
+
+            // Prompt user to select a file location to save the CSV
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Specify a file to save");
+            fileChooser.setSelectedFile(new File("release_year_data.csv")); // Default file name
+
+            int userSelection = fileChooser.showSaveDialog(GameReleaseDataAnalysis.this);
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave))) {
+                    // Write CSV header
+                    writer.write("Release Year,Number of Games");
+                    writer.newLine();
+
+                    // Write data from the dataset
+                    for (int i = 0; i < dataset.getColumnCount(); i++) {
+                        String year = dataset.getColumnKey(i).toString();
+                        Number count = dataset.getValue(0, i); // Assuming single series
+                        writer.write(year + "," + count);
+                        writer.newLine();
+                    }
+
+                    JOptionPane.showMessageDialog(GameReleaseDataAnalysis.this, "Data exported successfully to " + fileToSave.getAbsolutePath());
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(GameReleaseDataAnalysis.this, "Error saving file: " + ex.getMessage());
+                }
+            }
         }
     }
 
