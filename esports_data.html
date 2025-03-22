@@ -160,12 +160,38 @@
             content: '🌙'; /* Moon icon */
             left: 27px; /* Adjust position for moon emoji */
         }
+
+        .stats-container {
+            display: flex; /* Use flexbox for layout */
+            justify-content: space-around; /* Space out the containers */
+            margin: 20px 0; /* Margin for spacing */
+        }
+
+        .stats-card {
+            background-color: var(--container-bg); /* Background color for stats cards */
+            border-radius: 10px; /* Rounded corners */
+            padding: 20px; /* Padding inside the card */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Shadow for depth */
+            text-align: center; /* Center text */
+            flex: 1; /* Allow cards to grow equally */
+            margin: 0 10px; /* Margin between cards */
+        }
+
+        .stats-card h3 {
+            margin: 0; /* Remove default margin */
+            font-size: 1.5rem; /* Font size for headings */
+        }
+
+        .stats-card .value {
+            font-size: 2rem; /* Font size for values */
+            font-weight: bold; /* Bold text for emphasis */
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="button-container">
-            <h1>Game Release Year Analysis</h1>
+            <h1>Distribution of Games by Release Year</h1>
             <input type="file" id="fileInput" accept=".csv" />
             <div class="button-row">
                 <button id="processButton">Process Data</button>
@@ -178,6 +204,30 @@
                 </label>
             </div>
         </div>
+        
+        <div class="stats-container">
+            <div class="stats-card">
+                <h3>Total Games Released</h3>
+		<br>
+                <div id="totalGames" class="value">0</div>
+            </div>
+            <div class="stats-card">
+                <h3>Average Games Released</h3>
+		<br>
+                <div id="averageGames" class="value">0</div>
+            </div>
+            <div class="stats-card">
+                <h3>Year with Most Releases</h3>
+		<br>
+                <div id="maxGamesYear" class="value">N/A</div>
+            </div>
+            <div class="stats-card">
+                <h3>Year with Least Releases</h3>
+		<br>
+                <div id="minGamesYear" class="value">N/A</div>
+            </div>
+        </div>
+
         <div class="chart-container">
             <canvas id="releaseYearChart"></canvas>
         </div>
@@ -204,6 +254,7 @@
             reader.onload = function(event) {
                 const csvData = event.target.result;
                 parseCSV(csvData);
+                updateStatistics();
                 createChart();
                 document.getElementById('exportButton').style.display = 'block'; // Show export button
             };
@@ -220,11 +271,28 @@
                     const releaseYear = columns[8].trim(); // Assuming the release year is in the 9th column
                     
                     // Check if the release year is a valid number and within a reasonable range
-                    if (releaseYear && !isNaN(releaseYear) && releaseYear >= 1990 && releaseYear <= new Date().getFullYear()) {
+                    if (releaseYear && !isNaN(releaseYear) && releaseYear >= 1993 && releaseYear <= 2020) {
                         releaseYearData[releaseYear] = (releaseYearData[releaseYear] || 0) + 1;
                     }
+                } else {
+                    console.error("Row does not have enough columns:", row);
                 }
             });
+            console.log("Parsed release year data:", releaseYearData);
+        }
+
+        function updateStatistics() {
+            const totalGames = Object.values(releaseYearData).reduce((a, b) => a + b, 0);
+            const averageGames = totalGames / Object.keys(releaseYearData).length || 0;
+
+            // Find the year with the most and least releases
+            const maxGamesYear = Object.keys(releaseYearData).reduce((a, b) => releaseYearData[a] > releaseYearData[b] ? a : b);
+            const minGamesYear = Object.keys(releaseYearData).reduce((a, b) => releaseYearData[a] < releaseYearData[b] ? a : b);
+
+            document.getElementById('totalGames').textContent = totalGames;
+            document.getElementById('averageGames').textContent = averageGames.toFixed(2);
+            document.getElementById('maxGamesYear').textContent = maxGamesYear;
+            document.getElementById('minGamesYear').textContent = minGamesYear;
         }
 
         function createChart() {
@@ -232,26 +300,13 @@
             const labels = Object.keys(releaseYearData).sort(); // Sort years
             const data = Object.values(releaseYearData);
 
-            // Create an array of years to display, excluding 2021 to 2025 if their data is zero
-            const yearsToDisplay = [];
-            const filteredData = [];
-
-            for (let i = 0; i < labels.length; i++) {
-                const year = labels[i];
-                // Exclude years 2021 to 2025 if they have no data
-                if (year < 2021 || year > 2025 || (releaseYearData[year] && releaseYearData[year] > 0)) {
-                    yearsToDisplay.push(year);
-                    filteredData.push(releaseYearData[year] || 0);
-                }
-            }
-
             const chart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: yearsToDisplay,
+                    labels: labels,
                     datasets: [{
                         label: 'Number of Games Released',
-                        data: filteredData,
+                        data: data,
                         backgroundColor: 'rgba(75, 192, 192, 0.6)',
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1
@@ -259,7 +314,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false, // Allow the chart to fill the canvas
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
                             display: true,
@@ -287,7 +342,7 @@
                         display: true,
                         text: 'Distribution of Games by Release Year',
                         font: {
-                            size: 20 // Increase title font size
+                            size: 20
                         }
                     },
                     scales: {
@@ -297,11 +352,11 @@
                                 display: true,
                                 text: 'Number of Games',
                                 font: {
-                                    size: 16 // Increase y-axis label font size
+                                    size: 16
                                 }
                             },
                             ticks: {
-                                stepSize: 1 // Set step size for y-axis ticks
+                                stepSize: 1
                             }
                         },
                         x: {
@@ -309,11 +364,11 @@
                                 display: true,
                                 text: 'Release Year',
                                 font: {
-                                    size: 16 // Increase x-axis label font size
+                                    size: 16
                                 }
                             },
                             ticks: {
-                                autoSkip: false // Show all x-axis labels
+                                autoSkip: false
                             }
                         }
                     }
