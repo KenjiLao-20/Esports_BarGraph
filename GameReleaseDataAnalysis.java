@@ -250,5 +250,6 @@ public class GameReleaseDataAnalysis extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(GameReleaseDataAnalysis::new);
+        //1
     }
 }
