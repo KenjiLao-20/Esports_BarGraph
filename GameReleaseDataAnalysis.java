@@ -20,7 +20,7 @@ import java.util.TreeMap;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 
-public class GameReleaseDataAnalysis extends JFrame {
+public class Graph extends JFrame {
     private DefaultCategoryDataset dataset;
     private JFreeChart chart;
     private ChartPanel chartPanel;
@@ -31,7 +31,7 @@ public class GameReleaseDataAnalysis extends JFrame {
     private File selectedFile; // Store the uploaded file
     private boolean isDarkMode = false;
 
-    public GameReleaseDataAnalysis() {
+    public Graph() {
         setTitle("Game Release Year Analysis");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -96,7 +96,7 @@ public class GameReleaseDataAnalysis extends JFrame {
             int returnValue = fileChooser.showOpenDialog(null);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 selectedFile = fileChooser.getSelectedFile();
-                JOptionPane.showMessageDialog(GameReleaseDataAnalysis.this, "File uploaded: " + selectedFile.getName());
+                JOptionPane.showMessageDialog(Graph.this, "File uploaded: " + selectedFile.getName());
                 exportButton.setEnabled(true); // Enable export button after uploading
             }
         }
@@ -108,7 +108,7 @@ public class GameReleaseDataAnalysis extends JFrame {
             if (selectedFile != null) {
                 processCSVFile(selectedFile);
             } else {
-                JOptionPane.showMessageDialog(GameReleaseDataAnalysis.this, "Please upload a CSV file first.");
+                JOptionPane.showMessageDialog(Graph.this, "Please upload a CSV file first.");
             }
         }
     }
@@ -159,7 +159,7 @@ public class GameReleaseDataAnalysis extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (dataset.getRowCount() == 0) {
-                JOptionPane.showMessageDialog(GameReleaseDataAnalysis.this, "No data to export.");
+                JOptionPane.showMessageDialog(Graph.this, "No data to export.");
                 return;
             }
 
@@ -168,7 +168,7 @@ public class GameReleaseDataAnalysis extends JFrame {
             fileChooser.setDialogTitle("Specify a file to save");
             fileChooser.setSelectedFile(new File("release_year_data.csv")); // Default file name
 
-            int userSelection = fileChooser.showSaveDialog(GameReleaseDataAnalysis.this);
+            int userSelection = fileChooser.showSaveDialog(Graph.this);
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave))) {
@@ -184,10 +184,10 @@ public class GameReleaseDataAnalysis extends JFrame {
                         writer.newLine();
                     }
 
-                    JOptionPane.showMessageDialog(GameReleaseDataAnalysis.this, "Data exported successfully to " + fileToSave.getAbsolutePath());
+                    JOptionPane.showMessageDialog(Graph.this, "Data exported successfully to " + fileToSave.getAbsolutePath());
                 } catch (IOException ex) {
                     ex.printStackTrace();
-                    JOptionPane.showMessageDialog(GameReleaseDataAnalysis.this, "Error saving file: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(Graph.this, "Error saving file: " + ex.getMessage());
                 }
             }
         }
@@ -249,7 +249,7 @@ public class GameReleaseDataAnalysis extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(GameReleaseDataAnalysis::new);
+        SwingUtilities.invokeLater(Graph::new);
         //1
     }
 }
