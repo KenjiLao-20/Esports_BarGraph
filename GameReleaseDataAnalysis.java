@@ -19,8 +19,9 @@ import java.util.Map;
 import java.util.TreeMap;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.renderer.category.BarRenderer;
 
-public class Graph extends JFrame {
+public class GameReleaseDataAnalysis extends JFrame {
     private DefaultCategoryDataset dataset;
     private JFreeChart chart;
     private ChartPanel chartPanel;
@@ -30,8 +31,12 @@ public class Graph extends JFrame {
     private JButton toggleThemeButton;
     private File selectedFile; // Store the uploaded file
     private boolean isDarkMode = false;
+    private Map<String, Integer> yearCountMap; // Store the final values
+    private Timer animationTimer;
+    private int animationStep = 0;
+    private final int TOTAL_ANIMATION_STEPS = 20; // Number of steps for animation
 
-    public Graph() {
+    public GameReleaseDataAnalysis() {
         setTitle("Game Release Year Analysis");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -83,8 +88,19 @@ public class Graph extends JFrame {
 
         // Adjust the category label font size
         CategoryAxis categoryAxis = chart.getCategoryPlot().getDomainAxis();
-        categoryAxis.setLabelFont(new Font("SansSerif", Font.PLAIN, 12)); // Same font size for category labels
-        categoryAxis.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(Math.PI / 4.0)); // Rotate labels
+        categoryAxis.setLabelFont(new Font("SansSerif", Font.PLAIN, 12));
+        categoryAxis.setCategoryLabelPositions(CategoryLabelPositions.createUpRotationLabelPositions(Math.PI / 4.0));
+
+        // Set up custom bar renderer
+        BarRenderer renderer = new BarRenderer() {
+            @Override
+            public Paint getItemPaint(int row, int column) {
+                // This will be used when we implement individual bar animation
+                return super.getItemPaint(row, column);
+            }
+        };
+        
+        chart.getCategoryPlot().setRenderer(renderer);
 
         return chart;
     }
@@ -96,8 +112,8 @@ public class Graph extends JFrame {
             int returnValue = fileChooser.showOpenDialog(null);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 selectedFile = fileChooser.getSelectedFile();
-                JOptionPane.showMessageDialog(Graph.this, "File uploaded: " + selectedFile.getName());
-                exportButton.setEnabled(true); // Enable export button after uploading
+                JOptionPane.showMessageDialog(GameReleaseDataAnalysis.this, "File uploaded: " + selectedFile.getName());
+                exportButton.setEnabled(true);
             }
         }
     }
@@ -106,88 +122,164 @@ public class Graph extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (selectedFile != null) {
-                processCSVFile(selectedFile);
+                // Process the CSV file to get year count data
+                processCSVFile();
+                // Start animation
+                animateBarChart();
             } else {
-                JOptionPane.showMessageDialog(Graph.this, "Please upload a CSV file first.");
+                JOptionPane.showMessageDialog(GameReleaseDataAnalysis.this, "Please upload a CSV file first.");
             }
         }
     }
 
-    private void processCSVFile(File file) {
-        dataset.clear(); // Clear previous data
-        Map<String, Integer> yearCountMap = new TreeMap<>(); // Use TreeMap to store year counts
+    private void processCSVFile() {
+        yearCountMap = new TreeMap<>(); // Use TreeMap to sort years
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(selectedFile))) {
             String line;
             br.readLine(); // Skip header
             while ((line = br.readLine()) != null) {
-                String[] columns = line.split(","); // Split by comma
+                String[] columns = line.split(",");
                 if (columns.length > 8) {
-                    String releaseYear = columns[8].trim(); // Assuming the release year is in the 9th column
+                    String releaseYear = columns[8].trim();
                     if (!releaseYear.isEmpty()) {
-                        // Check if the year is within the desired range
-                        int year;
                         try {
-                            year = Integer.parseInt(releaseYear);
+                            int year = Integer.parseInt(releaseYear);
                             if (year >= 1993 && year <= 2020) {
-                                // Increment the count for the year
                                 yearCountMap.put(releaseYear, yearCountMap.getOrDefault(releaseYear, 0) + 1);
                             }
                         } catch (NumberFormatException e) {
-                            // Handle the case where the year is not a valid integer
                             System.out.println("Invalid year format: " + releaseYear);
                         }
                     }
                 }
             }
-
-            // Add the sorted data to the dataset
-            for (Map.Entry<String, Integer> entry : yearCountMap.entrySet()) {
-                dataset.addValue(entry.getValue(), "Games", entry.getKey());
-            }
-
-            chart.fireChartChanged(); // Refresh the chart
-            chartPanel.revalidate(); // Revalidate the chart panel
-            chartPanel.repaint(); // Repaint the chart panel
         } catch (IOException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error reading file: " + ex.getMessage());
         }
     }
 
+    private void animateBarChart() {
+        // Clear any existing data
+        dataset.clear();
+        
+        // Initialize the dataset with zero values
+        for (String year : yearCountMap.keySet()) {
+            dataset.addValue(0, "Games", year);
+        }
+        
+        // Reset animation step
+        animationStep = 0;
+        
+        // Disable the process button during animation
+        processButton.setEnabled(false);
+        
+        // Use custom renderer for the animation
+        final BarRenderer renderer = (BarRenderer) chart.getCategoryPlot().getRenderer();
+        
+        // Create and start animation timer
+        animationTimer = new Timer(50, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                animationStep++;
+                
+                // Create custom renderer with animation effect
+                renderer.setBarPainter(new org.jfree.chart.renderer.category.StandardBarPainter());
+                
+                // Update each bar with its current height based on animation progress
+                for (Map.Entry<String, Integer> entry : yearCountMap.entrySet()) {
+                    String year = entry.getKey();
+                    int finalValue = entry.getValue();
+                    
+                    // Calculate current height as a percentage of final height
+                    double currentHeight = finalValue * ((double) animationStep / TOTAL_ANIMATION_STEPS);
+                    
+                    // Update the bar in the dataset
+                    dataset.setValue(currentHeight, "Games", year);
+                }
+                
+                // Custom colors for each bar based on animation progress
+                renderer.setSeriesPaint(0, isDarkMode ? Color.CYAN : Color.BLUE);
+                
+                // Implement individual bar animation by using a custom gradient paint
+                final int columnCount = dataset.getColumnCount();
+                for (int i = 0; i < columnCount; i++) {
+                    final String columnKey = (String) dataset.getColumnKey(i);
+                    final Number value = dataset.getValue("Games", columnKey);
+                    final double ratio = value.doubleValue() / yearCountMap.get(columnKey);
+                    
+                    // Only paint the portion of the bar that should be visible
+                    final Color baseColor = isDarkMode ? Color.CYAN : Color.BLUE;
+                    final Color topColor = isDarkMode ? new Color(0, 180, 180) : new Color(0, 0, 180);
+                    
+                    // Create gradient paint for each bar
+                    GradientPaint gradientPaint = new GradientPaint(
+                        0f, 0f, baseColor,
+                        0f, 100f, topColor
+                    );
+                    
+                    renderer.setSeriesItemLabelPaint(0, Color.BLACK);
+                    // FIX: This line was causing the error - renderer.setSeriesPaint(0, i, gradientPaint);
+                    // Using the correct method to set paint for an item
+                    renderer.setSeriesPaint(0, gradientPaint);
+                }
+                
+                // Refresh the chart
+                chart.fireChartChanged();
+                
+                // Check if animation is complete
+                if (animationStep >= TOTAL_ANIMATION_STEPS) {
+                    animationTimer.stop();
+                    
+                    // Set the final exact values
+                    for (Map.Entry<String, Integer> entry : yearCountMap.entrySet()) {
+                        dataset.setValue(entry.getValue(), "Games", entry.getKey());
+                    }
+                    
+                    // Refresh chart with final values
+                    chart.fireChartChanged();
+                    
+                    // Re-enable the process button
+                    processButton.setEnabled(true);
+                }
+            }
+        });
+        
+        // Start the animation
+        animationTimer.start();
+    }
+
     private class ExportDataAction implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (dataset.getRowCount() == 0) {
-                JOptionPane.showMessageDialog(Graph.this, "No data to export.");
+                JOptionPane.showMessageDialog(GameReleaseDataAnalysis.this, "No data to export.");
                 return;
             }
 
-            // Prompt user to select a file location to save the CSV
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Specify a file to save");
-            fileChooser.setSelectedFile(new File("release_year_data.csv")); // Default file name
+            fileChooser.setSelectedFile(new File("release_year_data.csv"));
 
-            int userSelection = fileChooser.showSaveDialog(Graph.this);
+            int userSelection = fileChooser.showSaveDialog(GameReleaseDataAnalysis.this);
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave))) {
-                    // Write CSV header
                     writer.write("Release Year,Number of Games");
                     writer.newLine();
 
-                    // Write data from the dataset
                     for (int i = 0; i < dataset.getColumnCount(); i++) {
                         String year = dataset.getColumnKey(i).toString();
-                        Number count = dataset.getValue(0, i); // Assuming single series
+                        Number count = dataset.getValue(0, i);
                         writer.write(year + "," + count);
                         writer.newLine();
                     }
 
-                    JOptionPane.showMessageDialog(Graph.this, "Data exported successfully to " + fileToSave.getAbsolutePath());
+                    JOptionPane.showMessageDialog(GameReleaseDataAnalysis.this, "Data exported successfully to " + fileToSave.getAbsolutePath());
                 } catch (IOException ex) {
                     ex.printStackTrace();
-                    JOptionPane.showMessageDialog(Graph.this, "Error saving file: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(GameReleaseDataAnalysis.this, "Error saving file: " + ex.getMessage());
                 }
             }
         }
@@ -210,17 +302,15 @@ public class Graph extends JFrame {
             chart.getPlot().setBackgroundPaint(Color.DARK_GRAY);
             chart.getCategoryPlot().setDomainGridlinePaint(Color.LIGHT_GRAY);
             chart.getCategoryPlot().setRangeGridlinePaint(Color.LIGHT_GRAY);
-            chart.getCategoryPlot().getRenderer().setSeriesPaint(0, Color.CYAN); // Change bar color
+            chart.getCategoryPlot().getRenderer().setSeriesPaint(0, Color.CYAN);
             
-            // Change text colors in the chart
-            chart.getCategoryPlot().getDomainAxis().setLabelPaint(Color.WHITE); // Axis label color
-            chart.getCategoryPlot().getRangeAxis().setLabelPaint(Color.WHITE); // Axis label color
-            chart.getCategoryPlot().getDomainAxis().setTickLabelPaint(Color.LIGHT_GRAY); // Tick label color
-            chart.getCategoryPlot().getRangeAxis().setTickLabelPaint(Color.LIGHT_GRAY); // Tick label color
-            chart.getLegend().setBackgroundPaint(Color.DARK_GRAY); // Legend background color
-            chart.getLegend().setItemPaint(Color.WHITE); // Legend text color
+            chart.getCategoryPlot().getDomainAxis().setLabelPaint(Color.WHITE);
+            chart.getCategoryPlot().getRangeAxis().setLabelPaint(Color.WHITE);
+            chart.getCategoryPlot().getDomainAxis().setTickLabelPaint(Color.LIGHT_GRAY);
+            chart.getCategoryPlot().getRangeAxis().setTickLabelPaint(Color.LIGHT_GRAY);
+            chart.getLegend().setBackgroundPaint(Color.DARK_GRAY);
+            chart.getLegend().setItemPaint(Color.WHITE);
             
-            // Change button panel color
             JPanel buttonPanel = (JPanel) getContentPane().getComponent(1);
             buttonPanel.setBackground(Color.GRAY);
         } else {
@@ -231,25 +321,22 @@ public class Graph extends JFrame {
             chart.getPlot().setBackgroundPaint(Color.WHITE);
             chart.getCategoryPlot().setDomainGridlinePaint(Color.GRAY);
             chart.getCategoryPlot().setRangeGridlinePaint(Color.GRAY);
-            chart.getCategoryPlot().getRenderer().setSeriesPaint(0, Color.BLUE); // Change bar color
+            chart.getCategoryPlot().getRenderer().setSeriesPaint(0, Color.BLUE);
             
-            // Change text colors in the chart
-            chart.getCategoryPlot().getDomainAxis().setLabelPaint(Color.BLACK); // Axis label color
-            chart.getCategoryPlot().getRangeAxis().setLabelPaint(Color.BLACK); // Axis label color
-            chart.getCategoryPlot().getDomainAxis().setTickLabelPaint(Color.BLACK); // Tick label color
-            chart.getCategoryPlot().getRangeAxis().setTickLabelPaint(Color.BLACK); // Tick label color
-            chart.getLegend().setBackgroundPaint(Color.WHITE); // Legend background color
-            chart.getLegend().setItemPaint(Color.BLACK); // Legend text color
+            chart.getCategoryPlot().getDomainAxis().setLabelPaint(Color.BLACK);
+            chart.getCategoryPlot().getRangeAxis().setLabelPaint(Color.BLACK);
+            chart.getCategoryPlot().getDomainAxis().setTickLabelPaint(Color.BLACK);
+            chart.getCategoryPlot().getRangeAxis().setTickLabelPaint(Color.BLACK);
+            chart.getLegend().setBackgroundPaint(Color.WHITE);
+            chart.getLegend().setItemPaint(Color.BLACK);
             
-            // Change button panel color
             JPanel buttonPanel = (JPanel) getContentPane().getComponent(1);
             buttonPanel.setBackground(Color.LIGHT_GRAY);
         }
-        chartPanel.repaint(); // Refresh the chart panel
+        chartPanel.repaint();
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(Graph::new);
-        //1
+        SwingUtilities.invokeLater(GameReleaseDataAnalysis::new);
     }
 }
