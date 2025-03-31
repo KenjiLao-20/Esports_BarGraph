@@ -34,7 +34,11 @@ public class GameReleaseDataAnalysis extends JFrame {
     private Map<String, Integer> yearCountMap; // Store the final values
     private Timer animationTimer;
     private int animationStep = 0;
-    private final int TOTAL_ANIMATION_STEPS = 20; // Number of steps for animation
+    
+    // Animation settings
+    private final int TOTAL_ANIMATION_STEPS = 160; // Number of steps for animation (8 seconds at 50 ms per step)
+    private final int ANIMATION_DURATION_MS = 8000; // Total animation duration in milliseconds
+    private final int TIMER_DELAY_MS = ANIMATION_DURATION_MS / TOTAL_ANIMATION_STEPS; // Calculate delay per step
 
     public GameReleaseDataAnalysis() {
         setTitle("Game Release Year Analysis");
@@ -179,13 +183,10 @@ public class GameReleaseDataAnalysis extends JFrame {
         final BarRenderer renderer = (BarRenderer) chart.getCategoryPlot().getRenderer();
         
         // Create and start animation timer
-        animationTimer = new Timer(50, new ActionListener() {
+        animationTimer = new Timer(TIMER_DELAY_MS, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 animationStep++;
-                
-                // Create custom renderer with animation effect
-                renderer.setBarPainter(new org.jfree.chart.renderer.category.StandardBarPainter());
                 
                 // Update each bar with its current height based on animation progress
                 for (Map.Entry<String, Integer> entry : yearCountMap.entrySet()) {
@@ -197,32 +198,6 @@ public class GameReleaseDataAnalysis extends JFrame {
                     
                     // Update the bar in the dataset
                     dataset.setValue(currentHeight, "Games", year);
-                }
-                
-                // Custom colors for each bar based on animation progress
-                renderer.setSeriesPaint(0, isDarkMode ? Color.CYAN : Color.BLUE);
-                
-                // Implement individual bar animation by using a custom gradient paint
-                final int columnCount = dataset.getColumnCount();
-                for (int i = 0; i < columnCount; i++) {
-                    final String columnKey = (String) dataset.getColumnKey(i);
-                    final Number value = dataset.getValue("Games", columnKey);
-                    final double ratio = value.doubleValue() / yearCountMap.get(columnKey);
-                    
-                    // Only paint the portion of the bar that should be visible
-                    final Color baseColor = isDarkMode ? Color.CYAN : Color.BLUE;
-                    final Color topColor = isDarkMode ? new Color(0, 180, 180) : new Color(0, 0, 180);
-                    
-                    // Create gradient paint for each bar
-                    GradientPaint gradientPaint = new GradientPaint(
-                        0f, 0f, baseColor,
-                        0f, 100f, topColor
-                    );
-                    
-                    renderer.setSeriesItemLabelPaint(0, Color.BLACK);
-                    // FIX: This line was causing the error - renderer.setSeriesPaint(0, i, gradientPaint);
-                    // Using the correct method to set paint for an item
-                    renderer.setSeriesPaint(0, gradientPaint);
                 }
                 
                 // Refresh the chart
