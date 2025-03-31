@@ -294,87 +294,89 @@
             document.getElementById('maxGamesYear').textContent = maxGamesYear;
             document.getElementById('minGamesYear').textContent = minGamesYear;
         }
+function createChart() {
+    const ctx = document.getElementById('releaseYearChart').getContext('2d');
+    const labels = Object.keys(releaseYearData).sort(); // Sort years
+    const data = Object.values(releaseYearData);
 
-        function createChart() {
-            const ctx = document.getElementById('releaseYearChart').getContext('2d');
-            const labels = Object.keys(releaseYearData).sort(); // Sort years
-            const data = Object.values(releaseYearData);
-
-            const chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Number of Games Released',
-                        data: data,
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Number of Games Released',
+                data: data,
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 8000, // Set the duration to 2000 milliseconds (2 seconds)
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(tooltipItem) {
-                                    return `${tooltipItem.label}: ${tooltipItem.raw} games`;
-                                }
-                            }
-                        },
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'end',
-                            formatter: (value) => value,
-                            color: 'black',
-                            font: {
-                                weight: 'bold',
-                                size: 12
-                            }
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: 'Distribution of Games by Release Year',
-                        font: {
-                            size: 20
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Number of Games',
-                                font: {
-                                    size: 16
-                                }
-                            },
-                            ticks: {
-                                stepSize: 1
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Release Year',
-                                font: {
-                                    size: 16
-                                }
-                            },
-                            ticks: {
-                                autoSkip: false
-                            }
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            return `${tooltipItem.label}: ${tooltipItem.raw} games`;
                         }
                     }
+                },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'end',
+                    formatter: (value) => value,
+                    color: 'black',
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    }
                 }
-            });
+            },
+            title: {
+                display: true,
+                text: 'Distribution of Games by Release Year',
+                font: {
+                    size: 20
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Games',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    ticks: {
+                        stepSize: 1
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Release Year',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    ticks: {
+                        autoSkip: false
+                    }
+                }
+            }
         }
+    });
+}
 
         function toggleTheme() {
             isDarkMode = !isDarkMode;
