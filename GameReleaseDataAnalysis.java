@@ -409,94 +409,89 @@ public class GameReleaseDataAnalysis extends JFrame {
             animationTimer.start();
         }
         
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2d = (Graphics2D) g;
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            
-            if (data.isEmpty() || maxValue == 0) {
-                // Draw empty chart
-                drawEmptyChart(g2d);
-                return;
-            }
-            
-            int width = getWidth() - (LEFT_PADDING + PADDING);
-            int height = getHeight() - (PADDING + BOTTOM_PADDING);
-            
-            // Draw axes
-            g2d.setColor(textColor);
-            g2d.drawLine(LEFT_PADDING, PADDING, LEFT_PADDING, height + PADDING);
-            g2d.drawLine(LEFT_PADDING, height + PADDING, width + LEFT_PADDING, height + PADDING);
-            
-            // Draw Y-axis labels
-            g2d.setFont(new Font("Arial", Font.PLAIN, 12));
-            int yLabelCount = 5;
-            for (int i = 0; i <= yLabelCount; i++) {
-                int value = maxValue * i / yLabelCount;
-                int y = height + PADDING - (height * i / yLabelCount);
-                g2d.drawString(String.valueOf(value), 5, y + 5);
-                g2d.drawLine(LEFT_PADDING - 5, y, LEFT_PADDING, y);
-            }
-            
-            // Draw title
-            g2d.setFont(new Font("Arial", Font.BOLD, 16));
-            String title = "Distribution of Games by Release Year";
-            FontMetrics fm = g2d.getFontMetrics();
-            int titleWidth = fm.stringWidth(title);
-            g2d.drawString(title, (getWidth() - titleWidth) / 2, 20);
-            
-            // Draw X and Y axis labels
-            g2d.setFont(new Font("Arial", Font.PLAIN, 14));
-            g2d.drawString("Release Year", width / 2, height + PADDING + 40);
-            
-            // Draw Y-axis label vertically
-            g2d.rotate(-Math.PI / 2, 15, height / 2);
-            g2d.drawString("Number of Games", 15, height / 2);
-            g2d.rotate(Math.PI / 2, 15, height / 2);
-            
-            // Calculate bar width based on data size
-            int dataSize = data.size();
-            int barWidth = Math.max(10, (width / dataSize) - 10);
-            int barSpacing = (width - (barWidth * dataSize)) / (dataSize + 1);
-            
-            // Draw bars
-            int i = 0;
-            List<String> years = new ArrayList<>(data.keySet());
-            for (String key : years) {
-                double currentHeight = currentHeights.get(key);
-                
-                int x = LEFT_PADDING + barSpacing + i * (barWidth + barSpacing);
-                int barHeight = (int) (height * currentHeight / maxValue);
-                int y = height + PADDING - barHeight;
-                
-                // Draw bar
-                g2d.setColor(barColor);
-                g2d.fillRect(x, y, barWidth, barHeight);
-                g2d.setColor(textColor);
-                g2d.drawRect(x, y, barWidth, barHeight);
-                
-                // Draw value above bar
-                String valueLabel = String.valueOf(Math.round(currentHeight));
-                int labelWidth = g2d.getFontMetrics().stringWidth(valueLabel);
-                g2d.drawString(valueLabel, x + (barWidth - labelWidth) / 2, y - 5);
-                
-                // Draw X-axis labels (only for select years to avoid crowding)
-                g2d.setFont(new Font("Arial", Font.PLAIN, 12));
-                
-                // Show every 3 years or every 5 years if we have more than 20 data points
-                boolean showLabel = (dataSize <= 20) ? 
-                                    (i % 3 == 0 || i == dataSize - 1) : 
-                                    (i % 5 == 0 || i == dataSize - 1);
-                
-                if (showLabel) {
-                    g2d.drawString(key, x + (barWidth - g2d.getFontMetrics().stringWidth(key)) / 2, 
-                                height + PADDING + 20);
-                }
-                
-                i++;
-            }
-        }
+@Override
+protected void paintComponent(Graphics g) {
+    super.paintComponent(g);
+    Graphics2D g2d = (Graphics2D) g;
+    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    
+    if (data.isEmpty() || maxValue == 0) {
+        // Draw empty chart
+        drawEmptyChart(g2d);
+        return;
+    }
+    
+    int width = getWidth() - (LEFT_PADDING + PADDING);
+    int height = getHeight() - (PADDING + BOTTOM_PADDING);
+    
+    // Draw axes
+    g2d.setColor(textColor);
+    g2d.drawLine(LEFT_PADDING, PADDING, LEFT_PADDING, height + PADDING);
+    g2d.drawLine(LEFT_PADDING, height + PADDING, width + LEFT_PADDING, height + PADDING);
+    
+// Draw Y-axis labels
+g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+int yLabelCount = 5;
+for (int i = 0; i <= yLabelCount; i++) {
+    int value = maxValue * i / yLabelCount;
+    int y = height + PADDING - (height * i / yLabelCount);
+    
+    // Adjust the X-coordinate to move the numbers to the right
+    g2d.drawString(String.valueOf(value), 30, y + 5); // Changed from 5 to 30
+    g2d.drawLine(LEFT_PADDING - 5, y, LEFT_PADDING, y);
+}
+    
+    // Draw title
+    g2d.setFont(new Font("Arial", Font.BOLD, 16));
+    String title = "Distribution of Games by Release Year";
+    FontMetrics fm = g2d.getFontMetrics();
+    int titleWidth = fm.stringWidth(title);
+    g2d.drawString(title, (getWidth() - titleWidth) / 2, 20);
+    
+    // Draw X and Y axis labels
+    g2d.setFont(new Font("Arial", Font.PLAIN, 14));
+    g2d.drawString("Release Year", width / 2, height + PADDING + 40);
+    
+    // Draw Y-axis label vertically
+    g2d.rotate(-Math.PI / 2, 15, height / 2);
+    g2d.drawString("Number of Games", 15, height / 2);
+    g2d.rotate(Math.PI / 2, 15, height / 2);
+    
+    // Calculate bar width based on data size
+    int dataSize = data.size();
+    int barWidth = Math.max(10, (width / dataSize) - 10);
+    int barSpacing = (width - (barWidth * dataSize)) / (dataSize + 1);
+    
+    // Draw bars
+    int i = 0;
+    List<String> years = new ArrayList<>(data.keySet());
+    for (String key : years) {
+        double currentHeight = currentHeights.get(key);
+        
+        int x = LEFT_PADDING + barSpacing + i * (barWidth + barSpacing);
+        int barHeight = (int) (height * currentHeight / maxValue);
+        int y = height + PADDING - barHeight;
+        
+        // Draw bar
+        g2d.setColor(barColor);
+        g2d.fillRect(x, y, barWidth, barHeight);
+        g2d.setColor(textColor);
+        g2d.drawRect(x, y, barWidth, barHeight);
+        
+        // Draw value above bar
+        String valueLabel = String.valueOf(Math.round(currentHeight));
+        int labelWidth = g2d.getFontMetrics().stringWidth(valueLabel);
+        g2d.drawString(valueLabel, x + (barWidth - labelWidth) / 2, y - 5);
+        
+        // Draw X-axis labels (slanted)
+        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+        g2d.rotate(-Math.toRadians(45), x + (barWidth / 2), height + PADDING + 20); // Rotate for slant
+        g2d.drawString(key, x + (barWidth - g2d.getFontMetrics().stringWidth(key)) / 2, height + PADDING + 20);
+        g2d.rotate(Math.toRadians(45), x + (barWidth / 2), height + PADDING + 20); // Rotate back
+        
+        i++;
+    }
+}
         
         private void drawEmptyChart(Graphics2D g2d) {
             g2d.setColor(textColor);
