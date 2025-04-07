@@ -190,13 +190,13 @@ public class GameReleaseDataAnalysis extends JFrame {
             }
         }
         
-        // Update buttons
+        // Update buttons with black text
         browseButton.setBackground(currentButtonBg);
-        browseButton.setForeground(Color.WHITE);
+        browseButton.setForeground(Color.BLACK);
         processButton.setBackground(currentButtonBg);
-        processButton.setForeground(Color.WHITE);
+        processButton.setForeground(Color.BLACK);
         exportButton.setBackground(currentButtonBg);
-        exportButton.setForeground(Color.WHITE);
+        exportButton.setForeground(Color.BLACK);
         
         // Update chart with theme colors
         barChart.setThemeColors(bgColor, textColor);
@@ -342,8 +342,8 @@ public class GameReleaseDataAnalysis extends JFrame {
         private Color backgroundColor = Color.WHITE;
         private Color textColor = Color.BLACK;
         private Timer animationTimer;
-        private static final int ANIMATION_DURATION = 1000; // milliseconds
-        private static final int ANIMATION_STEPS = 20;
+        private static final int ANIMATION_DURATION = 15000; // 15 seconds in milliseconds
+        private static final int ANIMATION_STEPS = 150; // More steps for smoother 15-second animation
         private static final int PADDING = 30;
         private static final int BOTTOM_PADDING = 60;
         private static final int LEFT_PADDING = 60;
